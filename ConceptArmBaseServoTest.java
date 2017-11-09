@@ -26,7 +26,8 @@ public class ConceptArmBaseServoTest extends OpMode {
 
         CRServo servoMotor;
         GyroSensor gyroSensor;
-        double SLOWSPEED = 0.4;
+        double SLOWSPEED = 0.04;
+        //speed needs to be somewhere between 0.04 (too slow) and 0.4 (too fast)
         int targetHeading = 0;
 
 
@@ -69,30 +70,41 @@ public class ConceptArmBaseServoTest extends OpMode {
                     return;
 
 
-            /*
+
+
             //function to have the correct target heading when using a joystick
 
             //way to have the correct targetHeading
             //if turning clockwise
-            double turnSize;
+            //turnSize = vector defined by right stick x and y values
+            double turnSize  =  Math.atan2(gamepad1.right_stick_y, gamepad1.right_stick_x) * (180/Math.PI);
             double targetClockwise = Math.abs(turnSize + gyroSensor.getHeading());
             if(targetClockwise <= 360) {
                 targetClockwise = targetClockwise;
             }
-            else if(targetClockwise > 360) {
-                targetClockwise = targetClockwise - 360;
+            else {
+                while (targetClockwise > 360) {
+                    targetClockwise = targetClockwise - 360;
+                }
             }
 
-            //if turning counterclockwise
-            double targetCounterClockwise =  Math.abs( turnSize- gyroSensor.getHeading());
-            if(targetCounterClockwise <= 360) {
-                targetCounterClockwise = targetCounterClockwise;
-            }
-            else if(targetCounterClockwise > 360){
-                targetCounterClockwise = targetCounterClockwise - 360;
+            servoMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+            while (gyroSensor.getHeading() < Math.abs(targetClockwise)) {
+                servoMotor.setPower(SLOWSPEED);
             }
 
-    */
+
+
+//            //if turning counterclockwise
+//            double targetCounterClockwise =  Math.abs( turnSize- gyroSensor.getHeading());
+//            if(targetCounterClockwise <= 360) {
+//                targetCounterClockwise = targetCounterClockwise;
+//            }
+//            else if(targetCounterClockwise > 360){
+//                targetCounterClockwise = targetCounterClockwise - 360;
+//            }
+
+
             //function to have correct target heading (only 90 degree) built into function
 
             //X button = servo motor turns 90 degrees counter clockwise, B button = servo motor turns 90 degrees clockwise
@@ -144,9 +156,13 @@ public class ConceptArmBaseServoTest extends OpMode {
             if (turnCounterClockwise90) {
                 telemetry.addData("Button X was pressed", "armTest");
             }
+            if(turnSize>0){
+                telemetry.addData("joystick was moved", "armTest");
+            }
             //telemetry.addData("RawZ", gyroSensor.rawZ() );
             telemetry.addData("getHeading", gyroSensor.getHeading());
             telemetry.addData("targetHeading", targetHeading);
+            telemetry.addData("turnSize", turnSize);
 
         }
 
