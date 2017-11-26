@@ -29,106 +29,106 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
+import org.firstinspires.ftc.teamcode.ArmAngles;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-/**
- * This OpMode uses the common Pushbot hardware class to define the devices on the robot.
- * All device access is managed through the HardwarePushbot class.
- * The code is structured as a LinearOpMode
- *
- * This particular OpMode executes a POV Game style Teleop for a PushBot
- * In this mode the left stick moves the robot FWD and back, the Right stick turns left and right.
- * It raises and lowers the claw using the Gampad Y and A buttons respectively.
- * It also opens and closes the claws slowly using the left and right Bumper buttons.
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
-
-
-
-public class RobotArmMath  {
+public class RobotArmMath {
     private double l1 = 18.125;  //length in inches of the first arm from joint to joint
-    private double l2 = 15;  //length in inches of the first arm from joint to joint
-    private double l3 = 3;  //legth in inches of the end effector
+    private double l2 = 15.25;  //length in inches of the first arm from joint to joint
+    private double l3 = 11;  //legth in inches of the end effector
     private double theta0, theta1, theta2, theta3; //theta0 = the base angle, theta1 = the angle between the second arm and the base, theta2 = angle between the second arm and the horizontal, theta3 = the angle between the end effector and the horizontal
     private double h = 16.06; //height in inches of the first revolute joint above the base
-
 
     private double c1(double theta3, double x0, double theta0) {
         double c1;
         c1 = 2 * l1 * l3 * Math.cos(theta3) - 2 * x0 * l1 / Math.cos(theta0);
         return c1;
     }
+
     private double c2(double theta3, double y0) {
         double c2;
         c2 = 2 * h * l1 + 2 * l1 * l3 * Math.sin(theta3) - 2 * y0 * l1;
         return c2;
     }
-    private double c3(double x0, double theta0, double y0, double theta3){
+
+    private double c3(double x0, double theta0, double y0, double theta3) {
         double c3;
-        c3 = Math.pow(x0,2)/((Math.cos(theta0)* Math.cos(theta0)+Math.pow(y0,2)+ Math.pow(h,2) + Math.pow(l1,2) + Math.pow(l3,2) - Math.pow(l2,2) - 2x0*l3*Math.cos(theta3)/Math.cos(theta0)-2y0*h+2l3*(Math.sin(theta3)*(h-y0);
+        c3 = Math.pow(x0, 2) / ((Math.cos(theta0) * Math.cos(theta0))) + Math.pow(y0, 2) + Math.pow(h, 2) + Math.pow(l1, 2) + Math.pow(l3, 2) - Math.pow(l2, 2) - (2 * (x0) * l3 * Math.cos(theta3)) / (Math.cos(theta0)) - 2 * (y0) * h + 2 * (l3) * (Math.sin(theta3) * (h - y0));
         return c3;
     }
+
     private double c4(double theta3, double x0, double theta0) {
         double c4;
         c4 = 2 * l2 * l3 * Math.cos(theta3) - 2 * x0 * l2 / Math.cos(theta0);
         return c4;
     }
-    private double c5(double theta3, double y0){
+
+    private double c5(double theta3, double y0) {
         double c5;
-        c5 = 2*h*l2+2*l2*l3*Math.sin(theta3) - 2*y0*l2);
+        c5 = 2 * h * l2 + 2 * l2 * l3 * Math.sin(theta3) - 2 * y0 * l2;
         return c5;
     }
+
     private double c6(double x0, double theta0, double y0, double theta3) {
         double c6;
-        c6 = ((Math.pow(x0,2)) / (Math.cos(theta0) * Math.cos(theta0)) + Math.pow(y0,2) + Math.pow(h,2) + Math.pow(l2,2) + Math.pow(l3,2) - Math.pow(l1,2) - 2 * x0 * l3 * Math.cos(theta3) / Math.cos(theta0) - 2 * y0 * h + 2 * l3 * Math.sin(theta3) * (h - y0);
+        c6 = ((Math.pow(x0, 2)) / (Math.cos(theta0) * Math.cos(theta0)) + Math.pow(y0, 2) + Math.pow(h, 2) + Math.pow(l2, 2) + Math.pow(l3, 2) - Math.pow(l1, 2) - 2 * x0 * l3 * Math.cos(theta3) / Math.cos(theta0) - 2 * y0 * h + 2 * l3 * Math.sin(theta3) * (h - y0));
+        return c6;
     }
 
-    /* Equation 22:
-    private double eq22{
-        double theta2;
-        theta2= 2 * Math.atan(c5 + sqrt(c5^2 - c6^2 + c4^2)/(c4-c6);
-        }
-        */
 
-    public double[] InverseKinematics (Position desiredPosition, double theta3) {
-        double[] ArmAngles=null;
+
+    // Equation 22:
+    private double eq22(double c4, double c5, double c6) {
+        double theta2;
+        theta2 = 2 * Math.atan(c5 + Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2)) / (c4 - c6));
+        return theta2;
+    }
+
+
+    public ArmAngles InverseKinematics(Position desiredPosition, double theta3) {
+        ArmAngles armAngles = new ArmAngles();
 
         double theta0, theta1, theta1plus, theta1minus, theta2, theta2plus, theta2minus;
 
-        theta0 = Math.atan(desiredPosition.Z/desiredPosition.X);
+        theta0 = Math.atan2(desiredPosition.Z, desiredPosition.X);
 
         double c1, c2, c3, c4, c5, c6;
-        c1=c1(theta3, desiredPosition.X, theta0);
-        c2=c2(theta3, desiredPosition.Y);
-        c3=c3(desiredPosition.X, theta0, desiredPosition.Y, theta3);
-        c4=c4(theta3, desiredPosition.X, theta0);
-        c5=c5(theta3, desiredPosition.Y);
-        c6=c6(desiredPosition.X, theta0, desiredPosition.Y, theta3);
+        c1 = c1(theta3, desiredPosition.X, theta0);
+        c2 = c2(theta3, desiredPosition.Y);
+        c3 = c3(desiredPosition.X, theta0, desiredPosition.Y, theta3);
+        c4 = c4(theta3, desiredPosition.X, theta0);
+        c5 = c5(theta3, desiredPosition.Y);
+        c6 = c6(desiredPosition.X, theta0, desiredPosition.Y, theta3);
 
-        theta1plus = 2*Math.atan2((c2+Math.sqrt(Math.pow(c2,2)-Math.pow(c3,2)+Math.pow(c1,2))),c1-c3);
-        theta1minus = 2*Math.atan2((c2-Math.sqrt(Math.pow(c2,2)-Math.pow(c3,2)+Math.pow(c1,2))),c1-c3);
-        if (theta1plus>theta1minus)  //Select the biggest angle for theta1
+        theta1plus = 2 * Math.atan2((c2 + Math.sqrt(Math.pow(c2, 2) - Math.pow(c3, 2) + Math.pow(c1, 2))), c1 - c3);
+        theta1minus = 2 * Math.atan2((c2 - Math.sqrt(Math.pow(c2, 2) - Math.pow(c3, 2) + Math.pow(c1, 2))), c1 - c3);
+        if (theta1plus > theta1minus)  //Select the biggest angle for theta1
             theta1 = theta1plus;
         else
             theta1 = theta1minus;
 
-        theta2plus = 2*Math.atan2((c5+Math.sqrt(Math.pow(c5,2)-Math.pow(c6,2)+Math.pow(c4,2))),c4-c6);
-        theta2minus = 2*Math.atan2((c5-Math.sqrt(Math.pow(c5,2)-Math.pow(c6,2)+Math.pow(c4,2))),c4-c6);
-        if (theta2plus>theta2minus)  //Select the biggest angle for theta2
+        theta2plus = 2 * Math.atan2((c5 + Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2))), c4 - c6);
+        theta2minus = 2 * Math.atan2((c5 - Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2))), c4 - c6);
+        if (theta2plus > theta2minus)  //Select the biggest angle for theta2
             theta2 = theta2plus;
         else
             theta2 = theta2minus;
 
-        ArmAngles[0]=theta0;
-        ArmAngles[1]=theta1;
-        ArmAngles[2]=theta2;
+        armAngles.setTheta0(theta0);
+        armAngles.setTheta1(theta1);
+        armAngles.setTheta2(theta2);
 
-        return ArmAngles;
+        return armAngles;
     }
 
+
+
+    }
 }
+
+
+
+
+

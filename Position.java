@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 
 /**
- * Created by eileen on 11/12/17.
+ * Created by liza on 11/12/17.
  */
 
 @TeleOp(name = "Concept: Position", group = "Concept")
@@ -16,38 +16,41 @@ public class Position {
     final double QUANTA = 0.05;
 
     public Position() {
-        X = 0;
-        Y = 0;
+        X = 0;  //Forward
+        Y = 0;  //UP!!!
         Z = 0;
     }
 
     public Position(double x, double y, double z) {
-        X = x;
-        Y = y;
+        X = x;  //Forward
+        Y = y;  //UP!!!
         Z = z;
-
     }
 
-    public Position calcNewPosition(boolean xright, boolean xleft, boolean yup, boolean ydown, double Z) {
+    public Position calcNewPosition(boolean zright, boolean zleft, boolean xforward, boolean xback, double yupdown) {
 
         double gamepadX, gamepadY, gamepadZ;
 
-        if (xright)
+        if (zright)
+            gamepadZ = 1 * QUANTA;
+        else if (zleft)
+            gamepadZ = -1 * QUANTA;
+        else gamepadZ = 0;
+
+        if (xforward)
             gamepadX = 1 * QUANTA;
-        else if (xleft)
+        else if (xback)
             gamepadX = -1 * QUANTA;
         else gamepadX = 0;
 
-        if (yup)
-            gamepadY = 1 * QUANTA;
-        else if (ydown)
-            gamepadY = -1 * QUANTA;
-        else gamepadY = 0;
+        gamepadY = yupdown * QUANTA;
 
-        gamepadZ = Z * QUANTA;
+        return new Position(X+gamepadX, Y+gamepadY, Z+gamepadZ);
+    }
 
-        return new Position(gamepadX, gamepadY, gamepadZ);
-
+    public String toString()
+    {
+        return "Rounded Pos: X:" + Math.round(X) + " Y:" + Math.round(Y) + " Z:" + Math.round(Z);
     }
 }
 
