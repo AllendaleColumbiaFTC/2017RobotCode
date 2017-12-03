@@ -1,5 +1,3 @@
-
-
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -7,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
@@ -38,13 +37,12 @@ public class ConceptIK extends OpMode {
     Position currentPos;
     CRServo servoMotor;
     GyroSensor gyroSensor;
-    double SLOWSPEED = 0.4;
+    double SLOWSPEED = 0.1;
     int targetHeading = 0;
     int NAVTHRESHOLD = 3;
 
     public ConceptIK() {
         //Constructor
-
     }
 
     @Override
@@ -52,24 +50,48 @@ public class ConceptIK extends OpMode {
 
         shoulder = hardwareMap.dcMotor.get("shoulder");
         shoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        shoulder.setPower(0.0);
+        shoulder.setPower(SLOWSPEED);
         shoulder.setDirection(DcMotorSimple.Direction.FORWARD);
         elbow = hardwareMap.dcMotor.get("elbow");
         elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        elbow.setPower(0.0);
+        elbow.setPower(SLOWSPEED);
         elbow.setDirection(DcMotorSimple.Direction.FORWARD);
         wrist = hardwareMap.servo.get("wrist");
+        wrist.setPosition(.3);
         baseServo = hardwareMap.crservo.get("baseServo");
 
         last_x = 0;
         last_y = 0;
         last_z = 0;
         currentPos = new Position();
+
+        lastTheta0 = 0;
+        lastTheta1 = 0;
+        lastTheta2 = 0;
+        lastTheta3 = ;
+
+
     }
 
 
     @Override
     public void loop() {
+
+        boolean elbowAngleIncrease = gamepad1.y;
+        boolean elbowAngleDecrease = gamepad1.a;
+
+
+        if (elbow.isBusy())
+                return;
+
+        if (elbowAngleIncrease)
+            turnElbowMotor(30);
+        if (elbowAngleDecrease)
+            turnElbowMotor(-30);
+
+
+
+/*
         ArmAngles armAngles = new ArmAngles();
 
         //get driver inputs
@@ -91,51 +113,96 @@ public class ConceptIK extends OpMode {
 
         //calculate desired joint angles
         RobotArmMath robotArm = new RobotArmMath();
-        armAngles = robotArm.InverseKinematics(currentPos,theta3);
+        armAngles = robotArm.InverseKinematics(currentPos, theta3);
         telemetry.addData("armAngles", armAngles);
 
         //run base, shoulder, elbow and wrist motors using encoders to achieve angles calculated by IK
-        //RunArmMotors(ArmAngles);
+        RunArmMotors(armAngles);
+        lastTheta0 = armAngles.getTheta0();
+        lastTheta1 = armAngles.getTheta1();
+        lastTheta2 = armAngles.getTheta2();
+        lastTheta3 = armAngles.getTheta3();
+
+*/
+
     }
 
 
-    private void RunArmMotors(double[] ArmAngles) {     //four angles passed in
+    private void RunArmMotors(ArmAngles armAngles) {     //four angles passed in
 
         // swing base to theta0 controlled by gyro
-        lastTheta0 = gyroSensor.getHeading();
-        if (lastTheta0 < ArmAngles[0]) {
+        //calculate required base turn
+        newTheta0 = armAngles.getTheta0();
+        double requiredTurn = newTheta0 - lastTheta0;
+        //command base servo to turn required distance (robot cannot be turning while the base servo is turning)
+        turnBaseServo(requiredTurn);
+
+        // raise/lower shoulder to theta1 controlled by encoder
+        newTheta1 = armAngles.getTheta1();
+        double shoulderTurn = newTheta1 - lastTheta1;
+        turnShoulderMotor(shoulderTurn);
+
+
+        // extend/contract elbow to theta2 controlled by encoder
+        newTheta2 = armAngles.getTheta2();
+        double elbowTurn = newTheta2 - lastTheta2;
+        turnElbowMotor(elbowTurn - shoulderTurn);
+
+        // flex wrist to theta3 controlled by pitch servo
+        wrist.setPosition(armAngles.getTheta3() / 200);
+        //newTheta3 = armAngles.getTheta3();
+        double wristTurn = elbowTurn; //TODO command to change from horizontal
+        turnWristServo (elbowTurn);
+
+        //turns completed! update values and send to Driver Station
+        lastTheta0 = newTheta0;
+        lastTheta1 = newTheta1;
+        lastTheta2 = newTheta2;
+
+        telemetry.addData("Theta0", lastTheta0);
+        telemetry.addData("Theta1", lastTheta1);
+        telemetry.addData("Theta2", lastTheta2);
+    }
+
+    private void turnBaseServo(double requiredTurn){
+        double currentHeading = gyroSensor.getHeading();
+        targetHeading = (int) Math.round(requiredTurn +  currentHeading);
+        if (requiredTurn > 0) {
             servoMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-            targetHeading = (int) Math.round(ArmAngles[0]);
             if (targetHeading < 360) {
                 //do nothing
             } else if (targetHeading >= 360) {
                 targetHeading = targetHeading - 360;
             }
-            while (Math.abs(gyroSensor.getHeading() - targetHeading) > NAVTHRESHOLD) {
+            while ((gyroSensor.getHeading() - targetHeading) > NAVTHRESHOLD) {
                 servoMotor.setPower(SLOWSPEED);
             }
         } else {
             servoMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-            targetHeading = gyroSensor.getHeading() - 90;
             if (targetHeading >= 0) {
                 //do nothing
             } else if (targetHeading < 0) {
                 targetHeading = targetHeading + 360;
             }
-            while (Math.abs(gyroSensor.getHeading() - targetHeading) > NAVTHRESHOLD) {
+            while ((gyroSensor.getHeading() - targetHeading) > NAVTHRESHOLD) {
                 servoMotor.setPower(SLOWSPEED);
             }
         }
+    }
 
-        // raise/lower shoulder to theta1 controlled by encoder
-        shoulder.setTargetPosition((int) Math.round(ArmAngles[1] * TICKS / 360));
-
-        // extend/contract elbow to theta2 controlled by encoder
-        elbow.setTargetPosition((int) Math.round(ArmAngles[2] * TICKS / 360));
-
-        // flex wrist to theta3 controlled by pitch servo
-        wrist.setPosition(ArmAngles[3] / 200);
+    private void turnShoulderMotor(double turnDegrees){
+        shoulder.setTargetPosition((int) (Math.round((lastTheta1 + turnDegrees) * TICKS / 360)));
 
 
     }
+    private void turnElbowMotor(double turnDegrees){
+        elbow.setTargetPosition((int) (Math.round((lastTheta2 + turnDegrees) * TICKS / 360)));
+        lastTheta2 = lastTheta2 + turnDegrees;
+
+        telemetry.addData("Theta2", lastTheta2);
+    }
+    private void turnWristServo(double wristPosition){
+        wrist.setPosition(wristPosition);
+    }
+
 }

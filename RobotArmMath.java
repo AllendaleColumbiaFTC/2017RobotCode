@@ -90,7 +90,7 @@ public class RobotArmMath {
     public ArmAngles InverseKinematics(Position desiredPosition, double theta3) {
         ArmAngles armAngles = new ArmAngles();
 
-        double theta0, theta1, theta1plus, theta1minus, theta2, theta2plus, theta2minus;
+        double theta0, theta1, theta2;
 
         theta0 = Math.atan2(desiredPosition.Z, desiredPosition.X);
 
@@ -102,19 +102,8 @@ public class RobotArmMath {
         c5 = c5(theta3, desiredPosition.Y);
         c6 = c6(desiredPosition.X, theta0, desiredPosition.Y, theta3);
 
-        theta1plus = 2 * Math.atan2((c2 + Math.sqrt(Math.pow(c2, 2) - Math.pow(c3, 2) + Math.pow(c1, 2))), c1 - c3);
-        theta1minus = 2 * Math.atan2((c2 - Math.sqrt(Math.pow(c2, 2) - Math.pow(c3, 2) + Math.pow(c1, 2))), c1 - c3);
-        if (theta1plus > theta1minus)  //Select the biggest angle for theta1
-            theta1 = theta1plus;
-        else
-            theta1 = theta1minus;
-
-        theta2plus = 2 * Math.atan2((c5 + Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2))), c4 - c6);
-        theta2minus = 2 * Math.atan2((c5 - Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2))), c4 - c6);
-        if (theta2plus > theta2minus)  //Select the biggest angle for theta2
-            theta2 = theta2plus;
-        else
-            theta2 = theta2minus;
+        theta1 = 2 * Math.atan2((c2 - Math.sqrt(Math.pow(c2, 2) - Math.pow(c3, 2) + Math.pow(c1, 2))), c1 - c3);
+        theta2 = 2 * Math.atan2((c5 + Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2))), c4 - c6);
 
         armAngles.setTheta0(theta0);
         armAngles.setTheta1(theta1);
@@ -126,7 +115,9 @@ public class RobotArmMath {
 
 
     }
-}
+
+
+
 
 
 
