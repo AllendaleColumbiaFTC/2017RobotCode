@@ -40,6 +40,16 @@ public class ConceptIK extends OpMode {
     double SLOWSPEED = 0.1;
     int targetHeading = 0;
     int NAVTHRESHOLD = 3;
+    int PACKEDTHETA0 = 0;  //position at match start
+    int PACKEDTHETA1 = 225;
+    int PACKEDTHETA2 = 50;
+    int PACKEDTHETA3 = 190;
+    int UNFURLEDTHETA0 = 0; //initial driving position
+    int UNFURLEDTHETA1 = 7;
+    int UNFURLEDTHETA2 = 89;
+    int UNFURLEDTHETA3 = 0;
+
+
 
     public ConceptIK() {
         //Constructor
@@ -65,33 +75,36 @@ public class ConceptIK extends OpMode {
         last_z = 0;
         currentPos = new Position();
 
-        lastTheta0 = 0;
-        lastTheta1 = 0;
-        lastTheta2 = 0;
-        lastTheta3 = ;
-
-
+        lastTheta0 = PACKEDTHETA0;
+        lastTheta1 = PACKEDTHETA1;
+        lastTheta2 = PACKEDTHETA2;
+        lastTheta3 = PACKEDTHETA3;
     }
 
 
     @Override
     public void loop() {
-
-        boolean elbowAngleIncrease = gamepad1.y;
+/*      boolean elbowAngleIncrease = gamepad1.y;
         boolean elbowAngleDecrease = gamepad1.a;
+        boolean shoulderAngleIncrease = gamepad1.y;
+        boolean shoulderAngleDecrease = gamepad1.a;
 
-
-        if (elbow.isBusy())
+        if (shoulder.isBusy())
                 return;
 
-        if (elbowAngleIncrease)
-            turnElbowMotor(30);
-        if (elbowAngleDecrease)
-            turnElbowMotor(-30);
+        if (shoulderAngleIncrease)
+            turnShoulderMotor(2);
+        if (shoulderAngleDecrease)
+            turnShoulderMotor(-2);
+*/
+        boolean unfurlArmRequested = gamepad1.y && gamepad1.a;
+        if (unfurlArmRequested && (lastTheta0==PACKEDTHETA0) && (lastTheta1==PACKEDTHETA1)
+                && (lastTheta2==PACKEDTHETA2) && (lastTheta3==PACKEDTHETA3)) {
+            unfurlArm();
+        }
 
 
-
-/*
+        /*
         ArmAngles armAngles = new ArmAngles();
 
         //get driver inputs
@@ -122,9 +135,7 @@ public class ConceptIK extends OpMode {
         lastTheta1 = armAngles.getTheta1();
         lastTheta2 = armAngles.getTheta2();
         lastTheta3 = armAngles.getTheta3();
-
 */
-
     }
 
 
@@ -191,18 +202,53 @@ public class ConceptIK extends OpMode {
     }
 
     private void turnShoulderMotor(double turnDegrees){
-        shoulder.setTargetPosition((int) (Math.round((lastTheta1 + turnDegrees) * TICKS / 360)));
-
-
+        int currentShoulderMotorTicks = shoulder.getCurrentPosition();
+        shoulder.setTargetPosition((int) (currentShoulderMotorTicks + Math.round((turnDegrees) * TICKS / 360)));
     }
     private void turnElbowMotor(double turnDegrees){
-        elbow.setTargetPosition((int) (Math.round((lastTheta2 + turnDegrees) * TICKS / 360)));
-        lastTheta2 = lastTheta2 + turnDegrees;
-
-        telemetry.addData("Theta2", lastTheta2);
+        int currentElbowMotorTicks = shoulder.getCurrentPosition();
+        elbow.setTargetPosition((int) (currentElbowMotorTicks + Math.round((turnDegrees) * TICKS / 360)));
     }
     private void turnWristServo(double wristPosition){
         wrist.setPosition(wristPosition);
     }
+
+    private void unfurlArm(){
+        turnShoulderMotor(UNFURLEDTHETA1 - PACKEDTHETA1);
+        turnElbowMotor(UNFURLEDTHETA2 - PACKEDTHETA2);
+        try {
+            while (shoulder.isBusy() || elbow.isBusy()){
+                Thread.sleep(500); // pause for .5 seconds
+            }
+        }
+        catch (InterruptedException intExc) {
+            telemetry.addData("Interrupted!", intExc);
+        }
+        //unfurled!!  update lastTheta values and send info to DS
+        lastTheta1 = UNFURLEDTHETA1;
+        lastTheta2 = UNFURLEDTHETA2;
+        telemetry.addData("Unfurl Complete. Theta1=", Double.toString(lastTheta1)
+                + " Theta2=" + Double.toString(lastTheta2));
+    }
+
+    private void rePackArm(){
+        turnBaseServo(PACKEDTHETA0 - lastTheta0);
+        turnShoulderMotor(PACKEDTHETA1 - lastTheta1);
+        turnElbowMotor(PACKEDTHETA2 - lastTheta2);
+        try {
+            while (shoulder.isBusy() || elbow.isBusy()){
+                Thread.sleep(500); // pause for .5 seconds
+            }
+        }
+        catch (InterruptedException intExc) {
+            telemetry.addData("Interrupted!", intExc);
+        }
+        //packed!!  update lastTheta values and send info to DS
+        lastTheta1 = PACKEDTHETA1;
+        lastTheta2 = PACKEDTHETA2;
+        telemetry.addData("rePack Complete. Theta1=", Double.toString(lastTheta1)
+                + " Theta2=" + Double.toString(lastTheta2));
+    }
+
 
 }
