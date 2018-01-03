@@ -6,7 +6,7 @@ package org.firstinspires.ftc.teamcode;
 
 
 public class ArmAngles {
-    double theta0, theta1, theta2, theta3;
+    private double theta0, theta1, theta2, theta3;
 
     ArmAngles(){
             theta0=0;
@@ -48,9 +48,9 @@ public class ArmAngles {
             return theta3;
         }
 
-        public String toString() {
-            return "Rounded Degrees theta0:" + Math.round(theta0*180/Math.PI) + " t1" + Math.round(theta1*180/Math.PI) +
-                    " t2:" + Math.round(theta2*180/Math.PI) + " t3:" + Math.round(theta3*180/Math.PI);
+        public String toString() {  //show angles rounded to 3 decimal places
+            return "T0:" + (double)Math.round(theta0*1000)/1000 + " T1:" + (double)Math.round(theta1*1000)/1000 +
+                    " T2:" + (double)Math.round(theta2*1000)/1000 + " T3:" + (double)Math.round(theta3*1000)/1000;
         }
 
     }

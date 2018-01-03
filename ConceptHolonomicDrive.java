@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.Servo;
 
 
 /*
@@ -35,6 +36,7 @@ public class ConceptHolonomicDrive extends OpMode {
     DcMotor motorFrontLeft;
     DcMotor motorBackRight;
     DcMotor motorBackLeft;
+    //Servo   gripperServo;
 
     /**
      * Constructor
@@ -45,6 +47,10 @@ public class ConceptHolonomicDrive extends OpMode {
 
     @Override
     public void init() {
+
+        //gripperServo = hardwareMap.servo.get("gripperServo");
+        //gripperServo.setPosition(0.0);
+
 
 
 		/*
@@ -65,21 +71,19 @@ public class ConceptHolonomicDrive extends OpMode {
         //motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
         //motorBackRight.setDirection(DcMotor.Direction.REVERSE);
 
+
     }
 
     @Override
     public void loop() {
+    }
 
-
+    public void setHolonomicDrivePowers(float gamepad1LeftX, float gamepad1LeftY, float gamepad1RightX) {
         // left stick controls direction
         // right stick X controls rotation
 
-        float gamepad1LeftY = -gamepad1.left_stick_y;
-        float gamepad1LeftX = gamepad1.left_stick_x;
-        float gamepad1RightX = gamepad1.right_stick_x;
 
         // holonomic formulas
-
         float FrontLeft = -gamepad1LeftY - gamepad1LeftX - gamepad1RightX;
         float FrontRight = gamepad1LeftY - gamepad1LeftX - gamepad1RightX;
         float BackRight = gamepad1LeftY + gamepad1LeftX - gamepad1RightX;
@@ -92,22 +96,10 @@ public class ConceptHolonomicDrive extends OpMode {
         BackRight = Range.clip(BackRight, -1, 1);
 
         // write the values to the motors
-        motorFrontRight.setPower(FrontRight);
-        motorFrontLeft.setPower(FrontLeft);
-        motorBackLeft.setPower(BackLeft);
-        motorBackRight.setPower(BackRight);
-
-        //Test which motor is which by pressing gamepad buttons (y = front right, a = front left, b = back right, x = back left
-        if (gamepad1.y)
-            motorFrontRight.setPower(0.02);
-        else if (gamepad1.a)
-            motorFrontLeft.setPower(0.02);
-        else if (gamepad1.b)
-            motorBackRight.setPower(0.02);
-        else if (gamepad1.x)
-            motorBackLeft.setPower(0.02);
-
-
+        motorFrontRight.setPower(scaleInput(FrontRight));
+        motorFrontLeft.setPower(scaleInput(FrontLeft));
+        motorBackLeft.setPower(scaleInput(BackLeft));
+        motorBackRight.setPower(scaleInput(BackRight));
 
 		/*
 		 * Telemetry for debugging

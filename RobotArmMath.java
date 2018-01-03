@@ -29,17 +29,44 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.util.Range;
-import org.firstinspires.ftc.teamcode.ArmAngles;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+ //import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+ import org.firstinspires.ftc.teamcode.ArmAngles;
 
-public class RobotArmMath {
-    private double l1 = 18.125;  //length in inches of the first arm from joint to joint
-    private double l2 = 15.25;  //length in inches of the first arm from joint to joint
-    private double l3 = 11;  //legth in inches of the end effector
-    private double theta0, theta1, theta2, theta3; //theta0 = the base angle, theta1 = the angle between the second arm and the base, theta2 = angle between the second arm and the horizontal, theta3 = the angle between the end effector and the horizontal
-    private double h = 16.06; //height in inches of the first revolute joint above the base
+//@TeleOp(name = "RobotArmMath", group = "Concept")
+//@Disabled
+
+public class RobotArmMath {  //extends OpMode{
+
+    private double l1;  //length in inches of the first arm from joint to joint
+    private double l2;  //length in inches of the first arm from joint to joint
+    private double l3;  //legth in inches of the end effector
+    private double theta0;
+    private double theta1;
+    private double theta2;
+    private double theta3;
+    //theta0 = the base angle, theta1 = the angle between the second arm and the base, theta2 = angle between the second arm and the horizontal, theta3 = the angle between the end effector and the horizontal
+    private double h; //height in inches of the first revolute joint above the base
+
+    public RobotArmMath(){
+        //constructor
+        l1 = 18.125;  //length in inches of the first arm from joint to joint
+        l2 = 15.25;  //length in inches of the first arm from joint to joint
+        l3 = 11;  //length in inches of the end effector
+        h = 16.06; //height in inches of the first revolute joint above the base
+        theta3 = 0.0; //since theta3 is zero unless deliberately changed by joystick
+    }
+
+    public void init(){
+        l1 = 18.125;  //length in inches of the first arm from joint to joint
+        l2 = 15.25;  //length in inches of the first arm from joint to joint
+        l3 = 11;  //length in inches of the end effector
+        h = 16.06; //height in inches of the first revolute joint above the base
+        theta3 = 0.0; //since theta3 is zero unless deliberately changed by joystick
+    }
+
+    // @Override
+    public void loop() {
+    }
 
     private double c1(double theta3, double x0, double theta0) {
         double c1;
@@ -78,11 +105,10 @@ public class RobotArmMath {
     }
 
 
-
     // Equation 22:
     private double eq22(double c4, double c5, double c6) {
         double theta2;
-        theta2 = 2 * Math.atan(c5 + Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2)) / (c4 - c6));
+        theta2 = 2 * (180/Math.PI) * Math.atan((c5 + Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2))) / (c4 - c6));
         return theta2;
     }
 
@@ -90,31 +116,59 @@ public class RobotArmMath {
     public ArmAngles InverseKinematics(Position desiredPosition, double theta3) {
         ArmAngles armAngles = new ArmAngles();
 
-        double theta0, theta1, theta2;
+        double theta0radians, theta1, theta2;
 
-        theta0 = Math.atan2(desiredPosition.Z, desiredPosition.X);
+        theta0radians = Math.atan(desiredPosition.Z / desiredPosition.X);
 
         double c1, c2, c3, c4, c5, c6;
-        c1 = c1(theta3, desiredPosition.X, theta0);
+        c1 = c1(theta3, desiredPosition.X, theta0radians);
         c2 = c2(theta3, desiredPosition.Y);
-        c3 = c3(desiredPosition.X, theta0, desiredPosition.Y, theta3);
-        c4 = c4(theta3, desiredPosition.X, theta0);
+        c3 = c3(desiredPosition.X, theta0radians, desiredPosition.Y, theta3);
+        c4 = c4(theta3, desiredPosition.X, theta0radians);
         c5 = c5(theta3, desiredPosition.Y);
-        c6 = c6(desiredPosition.X, theta0, desiredPosition.Y, theta3);
+        c6 = c6(desiredPosition.X, theta0radians, desiredPosition.Y, theta3);
+				
+        // telemetry.addData("desiredPositionX" , desiredPosition.X);
+        // telemetry.addData("desiredPositionY" , desiredPosition.Y);
+        // telemetry.addData("desiredPositionZ" , desiredPosition.Z);
 
-        theta1 = 2 * Math.atan2((c2 - Math.sqrt(Math.pow(c2, 2) - Math.pow(c3, 2) + Math.pow(c1, 2))), c1 - c3);
-        theta2 = 2 * Math.atan2((c5 + Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2))), c4 - c6);
+        theta1 = 2 * (180/Math.PI) * Math.atan((c2 - Math.sqrt(Math.pow(c2, 2) - Math.pow(c3, 2) + Math.pow(c1, 2)))/ (c1 - c3));
+        theta2 = 2 * (180/Math.PI) * Math.atan((c5 + Math.sqrt(Math.pow(c5, 2) - Math.pow(c6, 2) + Math.pow(c4, 2)))/ (c4 - c6));
 
-        armAngles.setTheta0(theta0);
+        armAngles.setTheta0(theta0radians * (180/Math.PI));
         armAngles.setTheta1(theta1);
         armAngles.setTheta2(theta2);
+
+        // telemetry.addData("Theta0" , theta0);
+        // telemetry.addData("Theta1" , theta1);
+        // telemetry.addData("Theta2" , theta2);
+
+
+	System.out.println("c1: " + c1 + "\nc2: " + c2 + "\nc3: " + c3 +
+			"\nc4: " + c4 + "\nc5: " + c5 + "\nc6: " + c6 +
+			"\ntheta0: " + theta0 +
+			"\ntheta1: " + theta1 +
+			"\ntheta2: " + theta2);
 
         return armAngles;
     }
 
+public static final void main(String[] aArgs) {
+    java.io.Console console = System.console();
 
-
+    while (true) {
+        Double xin = Double.parseDouble(console.readLine("X? "));
+        Double yin = Double.parseDouble(console.readLine("Y? "));
+        Double zin = Double.parseDouble(console.readLine("Z? "));
+        Double theta3in = Double.parseDouble(console.readLine("theta3? "));
+        Position pin = new Position(xin, yin, zin);
+        RobotArmMath ram = new RobotArmMath();
+        ram.InverseKinematics(pin, theta3in);
     }
+}
+
+
+}
 
 
 

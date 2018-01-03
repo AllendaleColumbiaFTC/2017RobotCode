@@ -50,7 +50,7 @@ public class ConceptArmBaseServoTest extends OpMode {
 		 */
 
 
-            servoMotor = hardwareMap.crservo.get("armBaseServo");
+            servoMotor = hardwareMap.crservo.get("baseServo");
             servoMotor.setPower(0);
             gyroSensor = hardwareMap.gyroSensor.get("gyroSensor");
             gyroSensor.calibrate();
@@ -63,7 +63,7 @@ public class ConceptArmBaseServoTest extends OpMode {
            // float armPan = gamepad1.left_stick_x;
             boolean turnClockwise90 = gamepad2.b;
             boolean turnCounterClockwise90 = gamepad2.x;
-            int NAVTHRESHOLD = 5; //difference in degrees between current heading and target heading
+            int NAVTHRESHOLD = 3; //difference in degrees between current heading and target heading
 
             //exit loop if not done calibrating
             if (gyroSensor.isCalibrating())
